@@ -28,7 +28,208 @@
 </div>
       </div>
       
-      
+      <div class="col-lg-9 post"><div itemprop="image" itemscope="" itemtype="https://schema.org/ImageObject"><meta itemprop="url" content="https://media.techmaster.vn/api/static/bq0a8rs51co78aldi4p0/jsyJ_i91"><meta itemprop="width" content="800"><meta itemprop="height" content="800"></div><h1 class="margin-bottom-15">Hướng dẫn sử dụng JDBC kết nối cơ sở dữ liệu trong Java</h1><div class="margin-bottom-15">07 tháng 03, 2022 - 27467 lượt xem</div><div class="categories margin-bottom-15"> <a href="/posts?keyword=&amp;category=bpnjjev0k7qvdrn8hg50" style="text-decoration: none"><span class="badge category">Java nâng cao</span> </a> <a href="/posts?keyword=&amp;category=553" style="text-decoration: none"><span class="badge category">MySQL</span> </a> <a href="/posts?keyword=&amp;category=bkhdci451cofuk9m7n20" style="text-decoration: none"><span class="badge category">Java</span> </a></div><article class="techmaster-font-open-sans post-content" id="post-details"><p>Hiện nay hầu hết các ứng dụng Java hay các framework của nó đều dần chuyển sang các ORM(Object Relational Mapping) để làm việc với database, có thể kể đến là hibernate được sử dụng rộng rãi. Thế nên mọi người có xu hướng dần quên đi JDBC, thế nhưng các bạn có biết rằng bên dưới hibernate đang sử dụng JDBC để để kết nối đến database và thực thi các lệnh SQL được nó tạo ra.</p><p>Trong loạt bài viết này, chúng ta sẽ cùng tìm hiểu về JDBC và cách sử dụng chúng.</p><h2>JDBC là gì?</h2><p>JDBC - Java Database Connectivity, là một API chuẩn để kết nối giữa ngôn ngữ lập trình Java và các database. Nó là một phần của JavaSE (Java Standard Edition). API JDBC sử dụng JDBC drivers để kết nối với cơ sở dữ liệu.</p><h2>Kiến trúc JDBC</h2><p><img src="https://media.techmaster.vn/api/static/bq0a8rs51co78aldi4p0/diuws9Lf" alt=""></p><ul><li>JDBC API: Cho phép chương trình Java thực thi các câu lệnh SQL và truy xuất kết quả. Một số lớp và interface quan trọng được định nghĩa trong JDBC API như sau:</li><li>DriverManager: Đóng vai trò quan trọng trong kiến trúc JDBC. Nó sử dụng một số quy trình điều khiển dành riêng cho cơ sở dữ liệu để kết nối hiệu quả các ứng dụng doanh nghiệp với database</li><li>JDBC Driver: Để giao tiếp với nguồn dữ liệu thông qua JDBC, bạn cần JDBC Driver để giao tiếp với nguồn dữ liệu tương ứng. Có 4 loại JDBC drivers:<ul><li>JDBC - ODBC Bridge Driver</li><li>Native Drive</li><li>Network Protocol Driver</li><li>Thin driver</li></ul></li></ul><h2>Các thành phần chính trong JDBC</h2><ul><li>DriverManager: Là một class dùng để quản lý danh sách các Driver</li><li>Driver: Là một interface, chịu trách nhiệm xử lý các hoạt động giao tiếp giữa ứng dụng và database</li><li>Connection: Là một interface, cung cấp các phương thức cho việc thao tác với database</li><li>Statement: Là một interface, để thực thi các câu lệnh SQL xuống database</li><li>ResultSet: Là một bảng dữ liệu mà biểu diễn tập kết quả từ cơ sở dữ liệu trả về bởi các lệnh SQL</li><li>SQLException: Xử lý ngoại lệ xảy ra trong database</li></ul><h2>Các bước kết nối database với Java</h2><ul><li>Load driver</li><li>Tạo kết nối (Create Connection)</li><li>Tạo câu lệnh truy vấn SQL (Statement)</li><li>Thực thi câu lệnh truy vấn SQL (Excute query)</li><li>Đóng kết nối (Close Connection)</li></ul><h2>Tạo project ví dụ JDBC</h2><h3>Chuẩn bị database</h3><p>Trong ví dụ này mình sẽ sử dụng MySQL. Mình có một bảng <code>users</code> với cấu trúc sau:</p><p><img src="https://media.techmaster.vn/api/static/bq0a8rs51co78aldi4p0/GMRJHBhE" alt=""></p><p>Thêm một số dữ liệu vào bảng users</p><p><img src="https://media.techmaster.vn/api/static/bq0a8rs51co78aldi4p0/7X5KyJ13" alt=""></p><h3>Cài đặt thư viện</h3><p>Ở đây mình sẽ sử dụng Maven để quản lý chương trình Java</p><p>Add 2 <code>dependency</code> vào file pom.xml</p><div><pre><code class="hljs language-xml"><span class="hljs-comment">&lt;!-- https://mvnrepository.com/artifact/com.oracle.database.jdbc/ojdbc10 --&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>com.oracle.database.jdbc<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>ojdbc10<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>19.13.0.0.1<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+
+<span class="hljs-comment">&lt;!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java --&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>mysql<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>mysql-connector-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>8.0.28<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span>
+
+</code></pre><span class="mdi mdi-content-copy"></span></div><p>Nếu bạn sử dụng database khác thay vì MySQL thì hãy sử dụng các <code>dependency</code> khác</p><h3>Tạo kết nối tới database</h3><p>Để có thể kết nối tới database chúng ta cần chuẩn bị các thông tin như: hostname, username, password, database</p><div><pre><code class="hljs language-java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ConnectJDBC</span> {
+    <span class="hljs-keyword">private</span> <span class="hljs-type">String</span> <span class="hljs-variable">hostName</span> <span class="hljs-operator">=</span> <span class="hljs-string">"localhost:8082"</span>;
+    <span class="hljs-keyword">private</span> <span class="hljs-type">String</span> <span class="hljs-variable">dbName</span> <span class="hljs-operator">=</span> <span class="hljs-string">"my_database"</span>;
+    <span class="hljs-keyword">private</span> <span class="hljs-type">String</span> <span class="hljs-variable">username</span> <span class="hljs-operator">=</span> <span class="hljs-string">"root"</span>;
+    <span class="hljs-keyword">private</span> <span class="hljs-type">String</span> <span class="hljs-variable">password</span> <span class="hljs-operator">=</span> <span class="hljs-string">"123"</span>;
+
+    <span class="hljs-keyword">private</span> <span class="hljs-type">String</span> <span class="hljs-variable">connectionURL</span> <span class="hljs-operator">=</span> <span class="hljs-string">"jdbc:mysql://"</span>+hostName+<span class="hljs-string">"/"</span>+dbName;
+
+    <span class="hljs-keyword">public</span> Connection <span class="hljs-title function_">connect</span><span class="hljs-params">()</span>{
+        <span class="hljs-comment">//Tạo đối tượng Connection</span>
+        <span class="hljs-type">Connection</span> <span class="hljs-variable">conn</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;
+
+        <span class="hljs-keyword">try</span> {
+            conn = DriverManager.getConnection(connectionURL, username, password);
+            System.out.println(<span class="hljs-string">"Kết nối thành công"</span>);
+        } <span class="hljs-keyword">catch</span> (SQLException e) {
+            e.printStackTrace();
+        }
+
+        <span class="hljs-keyword">return</span> conn;
+    }
+}
+
+</code></pre><span class="mdi mdi-content-copy"></span></div><h3>Sử dụng JDBC API để truy vấn dữ liệu</h3><p><em><strong>Lấy ra toàn bộ thông tin users</strong></em></p><div><pre><code class="hljs language-java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Main</span> {
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> {
+        <span class="hljs-type">ConnectJDBC</span> <span class="hljs-variable">connectJDBC</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ConnectJDBC</span>();
+        <span class="hljs-type">Connection</span> <span class="hljs-variable">conn</span> <span class="hljs-operator">=</span> connectJDBC.connect();
+
+        <span class="hljs-type">String</span> <span class="hljs-variable">query</span> <span class="hljs-operator">=</span> <span class="hljs-string">"SELECT * FROM users"</span>;
+
+        <span class="hljs-type">Statement</span> <span class="hljs-variable">stm</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;
+        <span class="hljs-keyword">try</span> {
+            <span class="hljs-comment">//Tạo đối tượng Statement</span>
+            stm = conn.createStatement();
+
+            <span class="hljs-comment">//Thực thi truy vấn và trả về đối tượng ResultSet</span>
+            <span class="hljs-type">ResultSet</span> <span class="hljs-variable">rs</span> <span class="hljs-operator">=</span> stm.executeQuery(query);
+
+            <span class="hljs-comment">//Duyệt kết quả trả về</span>
+            <span class="hljs-keyword">while</span> (rs.next()){  <span class="hljs-comment">//Di chuyển con trỏ xuống bản ghi kế tiếp</span>
+                <span class="hljs-type">int</span> <span class="hljs-variable">id</span> <span class="hljs-operator">=</span> rs.getInt(<span class="hljs-string">"id"</span>);
+                <span class="hljs-type">String</span> <span class="hljs-variable">username</span> <span class="hljs-operator">=</span> rs.getString(<span class="hljs-string">"username"</span>);
+                <span class="hljs-type">String</span> <span class="hljs-variable">password</span> <span class="hljs-operator">=</span> rs.getString(<span class="hljs-string">"password"</span>);
+                <span class="hljs-type">String</span> <span class="hljs-variable">email</span> <span class="hljs-operator">=</span> rs.getString(<span class="hljs-string">"email"</span>);
+
+                System.out.println(id + <span class="hljs-string">" - "</span> + username + <span class="hljs-string">" - "</span> + password + <span class="hljs-string">" - "</span> + email);
+            }
+            <span class="hljs-comment">//Đóng kết nối</span>
+            conn.close();
+        } <span class="hljs-keyword">catch</span> (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+}
+
+</code></pre><span class="mdi mdi-content-copy"></span></div><p>Kết quả:</p><div><pre><code class="hljs language-java">Kết nối thành công
+<span class="hljs-number">1</span> - ngoc - <span class="hljs-number">12345</span> - ngoc<span class="hljs-meta">@gmail</span>.com
+<span class="hljs-number">2</span> - hoang - <span class="hljs-number">12345</span> - hoang<span class="hljs-meta">@gmail</span>.com
+<span class="hljs-number">3</span> - linh - <span class="hljs-number">12345</span> - linh<span class="hljs-meta">@gmail</span>.com
+<span class="hljs-number">4</span> - quan - <span class="hljs-number">12345</span> - quan<span class="hljs-meta">@gmail</span>.com
+
+</code></pre><span class="mdi mdi-content-copy"></span></div><p><em><strong>Chỉ định tham số đầu vào với PreparedStatement</strong></em></p><p>Tham số được đại diện bởi dấu ?, bạn phải cung cấp giá trị cho tất cả các tham số trước khi thực hiện câu lệnh SQL. Mỗi tham số sẽ được đánh dấu bằng số thứ tự, tham số đầu tiên có vị trí là 1, kế tiếp là 2,…</p><div><pre><code class="hljs language-java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Main</span> {
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> {
+        <span class="hljs-type">ConnectJDBC</span> <span class="hljs-variable">connectJDBC</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ConnectJDBC</span>();
+        <span class="hljs-type">Connection</span> <span class="hljs-variable">conn</span> <span class="hljs-operator">=</span> connectJDBC.connect();
+
+        <span class="hljs-type">String</span> <span class="hljs-variable">query</span> <span class="hljs-operator">=</span> <span class="hljs-string">"SELECT * FROM users WHERE username = ?"</span>;
+
+        <span class="hljs-type">PreparedStatement</span> <span class="hljs-variable">pstm</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;
+        <span class="hljs-keyword">try</span> {
+            <span class="hljs-comment">//Tạo đối tượng Statement</span>
+            pstm = conn.prepareStatement(query);
+
+            <span class="hljs-comment">//gán các giá trị vào tham số</span>
+            pstm.setString(<span class="hljs-number">1</span>, <span class="hljs-string">"ngoc"</span>);
+
+            <span class="hljs-comment">//Thực thi truy vấn và trả về đối tượng ResultSet</span>
+            <span class="hljs-type">ResultSet</span> <span class="hljs-variable">rs</span> <span class="hljs-operator">=</span> pstm.executeQuery();
+
+            <span class="hljs-comment">//Duyệt kết quả trả về</span>
+            <span class="hljs-keyword">while</span> (rs.next()){
+                <span class="hljs-type">int</span> <span class="hljs-variable">id</span> <span class="hljs-operator">=</span> rs.getInt(<span class="hljs-string">"id"</span>);
+                <span class="hljs-type">String</span> <span class="hljs-variable">username</span> <span class="hljs-operator">=</span> rs.getString(<span class="hljs-string">"username"</span>);
+                <span class="hljs-type">String</span> <span class="hljs-variable">password</span> <span class="hljs-operator">=</span> rs.getString(<span class="hljs-string">"password"</span>);
+                <span class="hljs-type">String</span> <span class="hljs-variable">email</span> <span class="hljs-operator">=</span> rs.getString(<span class="hljs-string">"email"</span>);
+
+                System.out.println(id + <span class="hljs-string">" - "</span> + username + <span class="hljs-string">" - "</span> + password + <span class="hljs-string">" - "</span> + email);
+            }
+
+            <span class="hljs-comment">//Đóng kết nối</span>
+            conn.close();
+        } <span class="hljs-keyword">catch</span> (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+</code></pre><span class="mdi mdi-content-copy"></span></div><p>Kết quả:</p><div><pre><code class="hljs language-css">Kết nố<span class="hljs-selector-tag">i</span> <span class="hljs-selector-tag">th</span>ành công
+<span class="hljs-number">1</span> - ngoc - <span class="hljs-number">12345</span> - ngoc<span class="hljs-keyword">@gmail</span>.com
+
+</code></pre><span class="mdi mdi-content-copy"></span></div><p><em><strong>Thêm dữ liệu mới</strong></em></p><div><pre><code class="hljs language-java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Main</span> {
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> {
+        <span class="hljs-type">ConnectJDBC</span> <span class="hljs-variable">connectJDBC</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ConnectJDBC</span>();
+        <span class="hljs-type">Connection</span> <span class="hljs-variable">conn</span> <span class="hljs-operator">=</span> connectJDBC.connect();
+
+        <span class="hljs-type">String</span> <span class="hljs-variable">query</span> <span class="hljs-operator">=</span> <span class="hljs-string">"INSERT INTO users(id, username, password, email) "</span> +
+                <span class="hljs-string">"VALUES (null, ?,?,?)"</span>;
+
+        <span class="hljs-type">PreparedStatement</span> <span class="hljs-variable">pstm</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;
+        <span class="hljs-keyword">try</span> {
+            pstm = conn.prepareStatement(query);
+
+            pstm.setString(<span class="hljs-number">1</span>, <span class="hljs-string">"hung"</span>);
+            pstm.setString(<span class="hljs-number">2</span>, <span class="hljs-string">"123456789"</span>);
+            pstm.setString(<span class="hljs-number">3</span>, <span class="hljs-string">"hung@gmail.com"</span>);
+
+            <span class="hljs-comment">//Khi thực hiện các lệnh insert/update/delete sử dụng executeUpdate(), nó sẽ trả về số hàng bị tác động</span>
+            <span class="hljs-type">int</span> <span class="hljs-variable">row</span> <span class="hljs-operator">=</span> pstm.executeUpdate();
+            <span class="hljs-keyword">if</span>(row != <span class="hljs-number">0</span>){
+                System.out.println(<span class="hljs-string">"Thêm thành công "</span> + row);
+            }
+
+            <span class="hljs-comment">//Đóng kết nối</span>
+            conn.close();
+        } <span class="hljs-keyword">catch</span> (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+</code></pre><span class="mdi mdi-content-copy"></span></div><p>Kết quả:</p><p><img src="https://media.techmaster.vn/api/static/bq0a8rs51co78aldi4p0/aZ8GhGip" alt=""></p><p><em><strong>Update password</strong></em></p><div><pre><code class="hljs language-java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Main</span> {
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> {
+        <span class="hljs-type">ConnectJDBC</span> <span class="hljs-variable">connectJDBC</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ConnectJDBC</span>();
+        <span class="hljs-type">Connection</span> <span class="hljs-variable">conn</span> <span class="hljs-operator">=</span> connectJDBC.connect();
+
+        <span class="hljs-type">String</span> <span class="hljs-variable">query</span> <span class="hljs-operator">=</span> <span class="hljs-string">"UPDATE users SET password = ? WHERE id = ?"</span>;
+
+        <span class="hljs-type">PreparedStatement</span> <span class="hljs-variable">pstm</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;
+        <span class="hljs-keyword">try</span> {
+            pstm = conn.prepareStatement(query);
+
+            pstm.setString(<span class="hljs-number">1</span>, <span class="hljs-string">"ngoc123"</span>);
+            pstm.setInt(<span class="hljs-number">2</span>, <span class="hljs-number">1</span>);
+
+            <span class="hljs-comment">//Khi thực hiện các lệnh insert/update/delete sử dụng executeUpdate, nó sẽ trả về số hàng bị tác động</span>
+            <span class="hljs-type">int</span> <span class="hljs-variable">row</span> <span class="hljs-operator">=</span> pstm.executeUpdate();
+            <span class="hljs-keyword">if</span>(row != <span class="hljs-number">0</span>){
+                System.out.println(<span class="hljs-string">"Cập nhật thành công "</span> + row);
+            }
+
+            <span class="hljs-comment">//Đóng kết nối</span>
+            conn.close();
+        } <span class="hljs-keyword">catch</span> (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+</code></pre><span class="mdi mdi-content-copy"></span></div><p>Kết quả:</p><p><img src="https://media.techmaster.vn/api/static/bq0a8rs51co78aldi4p0/jatoTZ3m" alt=""></p><p><em><strong>Xóa một record</strong></em></p><div><pre><code class="hljs language-java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Main</span> {
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> {
+        <span class="hljs-type">ConnectJDBC</span> <span class="hljs-variable">connectJDBC</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">ConnectJDBC</span>();
+        <span class="hljs-type">Connection</span> <span class="hljs-variable">conn</span> <span class="hljs-operator">=</span> connectJDBC.connect();
+
+        <span class="hljs-type">String</span> <span class="hljs-variable">query</span> <span class="hljs-operator">=</span> <span class="hljs-string">"DELETE FROM users WHERE id = ?"</span>;
+
+        <span class="hljs-type">PreparedStatement</span> <span class="hljs-variable">pstm</span> <span class="hljs-operator">=</span> <span class="hljs-literal">null</span>;
+        <span class="hljs-keyword">try</span> {
+            pstm = conn.prepareStatement(query);
+
+            pstm.setInt(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>);
+
+            <span class="hljs-comment">//Khi thực hiện các lệnh insert/update/delete sử dụng executeUpdate, nó sẽ trả về số hàng bị tác động</span>
+            <span class="hljs-type">int</span> <span class="hljs-variable">row</span> <span class="hljs-operator">=</span> pstm.executeUpdate();
+            <span class="hljs-keyword">if</span>(row != <span class="hljs-number">0</span>){
+                System.out.println(<span class="hljs-string">"Xóa thành công "</span> + row);
+            }
+
+            <span class="hljs-comment">//Đóng kết nối</span>
+            conn.close();
+        } <span class="hljs-keyword">catch</span> (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+</code></pre><span class="mdi mdi-content-copy"></span></div><p>Kết quả:</p><p><img src="https://media.techmaster.vn/api/static/bq0a8rs51co78aldi4p0/tgQfSIni" alt=""></p><p><em>Xem toàn bộ code tại <a href="https://github.com/EriChannel/JavaCore/tree/main/04_Complex_Topics/01_Connect_Database/demo-jdbc" rel="nofollow">đây</a></em></p><blockquote><p>Khóa học Java FullStack dành cho người mới bắt đầu</p><p>Chi tiết: <a href="https://java.techmaster.vn/" rel="nofollow">https://java.techmaster.vn/</a></p><p>Liên hệ hỗ trợ: Ms Mẫn - 0963023185 (zalo)</p></blockquote> </article><textarea title="clipboardHolder" name="clipboardHolder" id="clipboardHolder" cols="0" rows="0">
+                    </textarea> <div class="post-comments"><h2 class="title-comments-box">Bình luận</h2><div class="list-cmt"></div><div class="comments-box" id="writeComment"> <span class="note">* Vui lòng <span class="show-modal-login">đăng nhập</span> trước khi bình luận.</span><div class="comment"><div class="comment-author-avatar"><img src="/resources/image/logo.jpg" alt="Ảnh đại diện"></div><div class="comment-author-content"><textarea class="cmts-area" placeholder="Viết bình luận..." data-autoresize="" onkeyup="UpdateContentCmt(this,e)" disabled="disabled"></textarea></div></div></div></div><div class="interaction-div-mobile"><div class="interaction-div-mobile-item"><span class="liked-post-mobile interaction-like" onclick="LikePost()"><i class="fas fa-thumbs-up" style="color: #5E5E5E;"></i> </span>&nbsp; <span class="vote-score" style="font-size: 1rem">+6</span> Thích</div><div class="interaction-div-mobile-item"><a class="share-facebook" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https://techmaster.vn/posts/36976/huong-dan-su-dung-jdbc-ket-noi-co-so-du-lieu-trong-java"><button class="btn btn-primary" style="background-color: #2b4d8d; padding: 0.25rem 0.75rem"><i class="fab fa-facebook-square"></i> &nbsp;Chia sẻ</button></a></div></div></div>
     
     
     
